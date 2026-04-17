@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import apiDoc from '../../docs/api.md?raw';
+import architectureDoc from '../../docs/architecture.md?raw';
+import guideDoc from '../../docs/guide.md?raw';
 import schemaText from '../../services/api/schema.sql?raw';
 
 type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
@@ -49,10 +52,12 @@ const previewModes = [
 ] as const;
 
 type PreviewMode = typeof previewModes[number]['id'];
-type PlaygroundPage = 'app' | 'backend';
+type StudioPage = 'app' | 'backend' | 'docs';
+type DocTab = 'architecture' | 'guide' | 'api';
 
 const previewMode = ref<PreviewMode>(resolveMode());
-const page = ref<PlaygroundPage>(resolvePage());
+const page = ref<StudioPage>(resolvePage());
+const docTab = ref<DocTab>(resolveDocTab());
 const loading = ref(false);
 const actionBusy = ref(false);
 const error = ref('');
@@ -64,20 +69,28 @@ const latestApiResult = ref<ApiResult | null>(null);
 const patchTaskId = ref('');
 const patchStatus = ref<TaskStatus>('in_progress');
 const patchResolutionCode = ref('');
-const patchCompletedBy = ref('playground');
+const patchCompletedBy = ref('studio');
 const patchNotes = ref('');
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8080';
 const previewSrc = import.meta.env.VITE_APP_BASE_URL ?? 'http://127.0.0.1:4174/';
 const activePreview = computed(() => previewModes.find((item) => item.id === previewMode.value) ?? previewModes[0]);
+const docsByTab: Record<DocTab, { title: string; source: string }> = {
+  architecture: { title: 'Architecture', source: architectureDoc },
+  guide: { title: 'Guide', source: guideDoc },
+  api: { title: 'API docs', source: apiDoc }
+};
+const activeDoc = computed(() => docsByTab[docTab.value]);
+const renderedDoc = computed(() => renderMarkdown(activeDoc.value.source));
 const patchRequestBody = computed(() => {
   const body: Record<string, string> = { status: patchStatus.value };
+  const isTerminal = patchStatus.value === 'completed' || patchStatus.value === 'skipped';
 
-  if (patchCompletedBy.value.trim()) {
+  if (isTerminal && patchCompletedBy.value.trim()) {
     body.completed_by = patchCompletedBy.value.trim();
   }
 
-  if (patchResolutionCode.value.trim()) {
+  if (isTerminal && patchResolutionCode.value.trim()) {
     body.resolution_code = patchResolutionCode.value.trim();
   }
 
@@ -202,9 +215,15 @@ function reloadPreview() {
   iframeKey.value += 1;
 }
 
-function resolvePage(): PlaygroundPage {
+function resolvePage(): StudioPage {
   const hash = window.location.hash || '#/app';
-  return hash.startsWith('#/backend') ? 'backend' : 'app';
+  if (hash.startsWith('#/backend')) {
+    return 'backend';
+  }
+  if (hash.startsWith('#/docs')) {
+    return 'docs';
+  }
+  return 'app';
 }
 
 function resolveMode(): PreviewMode {
@@ -219,10 +238,17 @@ function resolveMode(): PreviewMode {
 function syncPageFromHash() {
   page.value = resolvePage();
   previewMode.value = resolveMode();
+  docTab.value = resolveDocTab();
 }
 
-function goTo(nextPage: PlaygroundPage) {
-  window.location.hash = nextPage === 'backend' ? '#/backend' : `#/app?mode=${previewMode.value}`;
+function goTo(nextPage: StudioPage) {
+  if (nextPage === 'backend') {
+    window.location.hash = '#/backend';
+  } else if (nextPage === 'docs') {
+    window.location.hash = `#/docs?tab=${docTab.value}`;
+  } else {
+    window.location.hash = `#/app?mode=${previewMode.value}`;
+  }
   page.value = nextPage;
 }
 
@@ -230,22 +256,124 @@ function setPreviewMode(nextMode: PreviewMode) {
   previewMode.value = nextMode;
   window.location.hash = `#/app?mode=${nextMode}`;
 }
+
+function resolveDocTab(): DocTab {
+  const hash = window.location.hash || '#/docs?tab=architecture';
+  const query = hash.split('?')[1] ?? '';
+  const params = new URLSearchParams(query);
+  const requestedTab = params.get('tab');
+
+  return requestedTab === 'guide' || requestedTab === 'api' ? requestedTab : 'architecture';
+}
+
+function setDocTab(nextTab: DocTab) {
+  docTab.value = nextTab;
+  window.location.hash = `#/docs?tab=${nextTab}`;
+}
+
+function renderMarkdown(source: string) {
+  const lines = source.split('\n');
+  const html: string[] = [];
+  let inList = false;
+  let inCode = false;
+
+  const escapeHtml = (value: string) => value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+
+  const renderInline = (value: string) => escapeHtml(value).replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd();
+
+    if (line.startsWith('```')) {
+      if (inList) {
+        html.push('</ul>');
+        inList = false;
+      }
+      html.push(inCode ? '</code></pre>' : '<pre class="doc-code"><code>');
+      inCode = !inCode;
+      continue;
+    }
+
+    if (inCode) {
+      html.push(`${escapeHtml(rawLine)}\n`);
+      continue;
+    }
+
+    if (line === '') {
+      if (inList) {
+        html.push('</ul>');
+        inList = false;
+      }
+      continue;
+    }
+
+    if (line.startsWith('## ')) {
+      if (inList) {
+        html.push('</ul>');
+        inList = false;
+      }
+      html.push(`<h2>${renderInline(line.slice(3))}</h2>`);
+      continue;
+    }
+
+    if (line.startsWith('# ')) {
+      if (inList) {
+        html.push('</ul>');
+        inList = false;
+      }
+      html.push(`<h1>${renderInline(line.slice(2))}</h1>`);
+      continue;
+    }
+
+    if (line.startsWith('- ')) {
+      if (!inList) {
+        html.push('<ul>');
+        inList = true;
+      }
+      html.push(`<li>${renderInline(line.slice(2))}</li>`);
+      continue;
+    }
+
+    if (inList) {
+      html.push('</ul>');
+      inList = false;
+    }
+
+    html.push(`<p>${renderInline(line)}</p>`);
+  }
+
+  if (inList) {
+    html.push('</ul>');
+  }
+
+  if (inCode) {
+    html.push('</code></pre>');
+  }
+
+  return html.join('');
+}
 </script>
 
 <template>
-  <main class="playground-shell">
-    <header class="playground-topbar surface">
+  <main class="studio-shell">
+    <header class="studio-topbar surface">
       <div>
-        <span class="brand-mark">playground</span>
+        <span class="brand-mark">studio</span>
         <p class="muted-copy">Repo-local app + API testing shell for `ShiftOps`.</p>
       </div>
       <div class="topbar-actions">
-        <div class="page-nav" role="tablist" aria-label="Playground pages">
+        <div class="page-nav" role="tablist" aria-label="Studio pages">
           <button type="button" class="nav-pill" :class="{ 'is-active': page === 'app' }" @click="goTo('app')">
             App
           </button>
           <button type="button" class="nav-pill" :class="{ 'is-active': page === 'backend' }" @click="goTo('backend')">
             API
+          </button>
+          <button type="button" class="nav-pill" :class="{ 'is-active': page === 'docs' }" @click="goTo('docs')">
+            Docs
           </button>
         </div>
       </div>
@@ -289,16 +417,24 @@ function setPreviewMode(nextMode: PreviewMode) {
       </article>
     </section>
 
-    <section v-else class="playground-grid">
+    <section v-else-if="page === 'backend'" class="studio-grid">
       <article class="surface section-card">
         <div class="section-head">
           <div>
             <span class="eyebrow">API endpoints</span>
             <h2>Run the live backend like a small Swagger lab.</h2>
           </div>
-          <button class="secondary-button" type="button" :disabled="actionBusy || loading" @click="refreshData">
-            Refresh snapshot
-          </button>
+          <div class="button-row">
+            <button class="secondary-button" type="button" :disabled="actionBusy || loading" @click="refreshData">
+              Refresh live data
+            </button>
+            <button class="secondary-button" type="button" :disabled="actionBusy" @click="runApi('Seed if empty', 'POST', '/v1/dev/seed')">
+              Seed if empty
+            </button>
+            <button class="primary-button" type="button" :disabled="actionBusy" @click="runApi('Reset and seed', 'POST', '/v1/dev/reset')">
+              Reset demo data
+            </button>
+          </div>
         </div>
 
         <p v-if="error" class="error-copy">{{ error }}</p>
@@ -395,7 +531,7 @@ function setPreviewMode(nextMode: PreviewMode) {
 
             <label class="field">
               <span class="muted-label">Completed by</span>
-              <input v-model="patchCompletedBy" placeholder="playground" />
+              <input v-model="patchCompletedBy" placeholder="studio" />
             </label>
           </div>
 
@@ -452,44 +588,74 @@ function setPreviewMode(nextMode: PreviewMode) {
             </div>
           </div>
 
-          <div class="schema-grid">
-            <article class="schema-card">
-              <strong>tasks</strong>
-              <ul class="schema-list">
-                <li>one row per field task</li>
-                <li><code>id</code>, <code>type</code>, <code>status</code>, <code>title</code></li>
-                <li><code>vehicle_id</code>, <code>location_label</code>, <code>distance_meters</code></li>
-                <li><code>battery_level</code>, <code>urgency</code>, <code>blocked_access_severity</code></li>
-                <li><code>started_at</code>, <code>completed_at</code>, <code>completed_by</code>, <code>resolution_code</code></li>
-              </ul>
-            </article>
+          <div class="schema-code-stack">
+            <div>
+              <span class="muted-label">tasks</span>
+              <pre class="code-block compact"><code>tasks
+  one row per field task
+  id, type, status, title
+  vehicle_id, location_label, distance_meters
+  battery_level, urgency, blocked_access_severity
+  checklist_state
+  started_at, completed_at, completed_by, resolution_code</code></pre>
+            </div>
 
-            <article class="schema-card">
-              <strong>task_events</strong>
-              <ul class="schema-list">
-                <li>append-only audit trail</li>
-                <li>captures each task state change</li>
-                <li>feeds <code>events_today</code> and later reporting</li>
-                <li>stores notes and resolution history</li>
-              </ul>
-            </article>
+            <div>
+              <span class="muted-label">task_events</span>
+              <pre class="code-block compact"><code>task_events
+  append-only audit trail
+  captures each task state change
+  feeds events_today and later reporting
+  stores notes and resolution history</code></pre>
+            </div>
+
+            <div>
+              <span class="muted-label">status model</span>
+              <pre class="code-block compact"><code>pending      queued work
+in_progress  active field task
+completed    terminal state
+skipped      terminal state
+
+ui rule
+  switching tasks can move the live task back to pending</code></pre>
+            </div>
           </div>
-
-          <article class="schema-card">
-            <strong>status model</strong>
-            <ul class="schema-list">
-              <li><code>pending</code> = queued work</li>
-              <li><code>in_progress</code> = active field task</li>
-              <li><code>completed</code> / <code>skipped</code> = terminal states</li>
-              <li>UI can move the active task back to <code>pending</code> when switching tasks</li>
-            </ul>
-          </article>
         </section>
 
         <details class="schema-details">
           <summary>SQLite schema reference</summary>
           <pre class="code-block compact"><code>{{ schemaText }}</code></pre>
         </details>
+      </article>
+    </section>
+
+    <section v-else class="surface section-card docs-shell">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Docs</span>
+          <h1>Architecture, guide, and API docs in one place.</h1>
+        </div>
+      </div>
+
+      <div class="doc-tab-row" role="tablist" aria-label="Docs tabs">
+        <button type="button" class="preview-tab" :class="{ 'is-active': docTab === 'architecture' }" @click="setDocTab('architecture')">
+          Architecture
+        </button>
+        <button type="button" class="preview-tab" :class="{ 'is-active': docTab === 'guide' }" @click="setDocTab('guide')">
+          Guide
+        </button>
+        <button type="button" class="preview-tab" :class="{ 'is-active': docTab === 'api' }" @click="setDocTab('api')">
+          API docs
+        </button>
+      </div>
+
+      <article class="doc-panel">
+        <div class="section-head compact">
+          <div>
+            <span class="eyebrow">{{ activeDoc.title }}</span>
+          </div>
+        </div>
+        <div class="doc-markdown" v-html="renderedDoc" />
       </article>
     </section>
   </main>

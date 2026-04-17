@@ -1,4 +1,4 @@
-# Playground
+# Studio
 
 Repo-local testing shell.
 
@@ -18,7 +18,7 @@ pnpm podman:up
 Then:
 
 - app: `http://localhost:4174`
-- playground: `http://localhost:4175`
+- studio: `http://localhost:4175`
 
 Stop:
 
@@ -31,5 +31,5 @@ Local fallback:
 ```bash
 pnpm dev:api
 pnpm dev:web
-pnpm dev:playground
+pnpm dev:studio
 ```

@@ -5,7 +5,7 @@ set -eu
 pnpm lint:web
 pnpm typecheck:web
 pnpm build:web
-pnpm build:playground
+pnpm build:studio
 
 fmt_out=$(gofmt -l services/api)
 if [ -n "$fmt_out" ]; then

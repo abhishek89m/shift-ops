@@ -55,7 +55,7 @@ INSERT INTO tasks (
   (
     'task_quality_01',
     'VOI-3044',
-    'Finish quality check already started',
+    'Run quality check at hotspot',
     'quality_check',
     'in_progress',
     2,

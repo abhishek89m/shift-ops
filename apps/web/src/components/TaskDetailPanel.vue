@@ -5,6 +5,7 @@ import type { LocaleCode, Task } from '../types';
 
 const props = defineProps<{
   actionBusy: boolean;
+  canComplete: boolean;
   checklistState: boolean[];
   isWide: boolean;
   locale: LocaleCode;
@@ -34,6 +35,12 @@ const outcomeCopy = computed(() => {
 
   return detailOutcomeCopy(props.task, props.locale);
 });
+
+const checklistLocked = computed(() => (
+  props.actionBusy
+  || !props.task
+  || props.task.status !== 'in_progress'
+));
 </script>
 
 <template>
@@ -100,6 +107,7 @@ const outcomeCopy = computed(() => {
           <input
             type="checkbox"
             :checked="checklistState[index] ?? false"
+            :disabled="checklistLocked"
             @change="emit('toggleChecklist', index)"
           >
           <span>{{ item }}</span>
@@ -116,7 +124,7 @@ const outcomeCopy = computed(() => {
         <button
           type="button"
           class="secondary-button"
-          :disabled="actionBusy || task.status === 'in_progress'"
+          :disabled="actionBusy || task.status !== 'pending'"
           @click="emit('start', task)"
         >
           {{ locale === 'sv' ? 'Starta' : 'Start' }}
@@ -124,7 +132,7 @@ const outcomeCopy = computed(() => {
         <button
           type="button"
           class="primary-button"
-          :disabled="actionBusy || task.status === 'completed'"
+          :disabled="actionBusy || !canComplete"
           @click="emit('complete', task)"
         >
           {{ locale === 'sv' ? 'Klarmarkera' : 'Complete' }}
@@ -132,7 +140,7 @@ const outcomeCopy = computed(() => {
         <button
           type="button"
           class="danger-button"
-          :disabled="actionBusy || task.status === 'skipped'"
+          :disabled="actionBusy || task.status !== 'in_progress'"
           @click="emit('skip', task)"
         >
           {{ locale === 'sv' ? 'Hoppa over' : 'Skip' }}

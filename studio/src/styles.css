@@ -38,7 +38,7 @@ pre {
   margin: 0;
 }
 
-.playground-shell {
+.studio-shell {
   width: min(1280px, calc(100vw - 24px));
   margin: 24px auto;
   display: grid;
@@ -52,12 +52,12 @@ pre {
   box-shadow: var(--shadow);
 }
 
-.playground-topbar,
+.studio-topbar,
 .section-card {
   padding: 20px;
 }
 
-.playground-topbar,
+.studio-topbar,
 .section-head,
 .task-head {
   display: flex;
@@ -67,12 +67,12 @@ pre {
 }
 
 .section-card,
-.playground-grid {
+.studio-grid {
   display: grid;
   gap: 16px;
 }
 
-.playground-grid {
+.studio-grid {
   grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
 }
 
@@ -139,6 +139,7 @@ h2 {
 
 .button-row,
 .preview-tab-row,
+.doc-tab-row,
 .metric-grid,
 .chip-row,
 .task-meta,
@@ -399,6 +400,73 @@ h2 {
   gap: 6px;
 }
 
+.docs-shell,
+.doc-panel,
+.doc-markdown {
+  display: grid;
+  gap: 16px;
+}
+
+.doc-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  background: rgba(255, 250, 244, 0.98);
+}
+
+.doc-markdown h1,
+.doc-markdown h2,
+.doc-markdown p,
+.doc-markdown ul,
+.doc-markdown pre {
+  margin: 0;
+}
+
+.doc-markdown h1 {
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+}
+
+.doc-markdown h2 {
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+  margin-top: 8px;
+}
+
+.doc-markdown p,
+.doc-markdown li {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.doc-markdown ul {
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+
+.doc-markdown code {
+  font-family: "SFMono-Regular", SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+}
+
+.doc-code {
+  overflow: auto;
+  max-width: 100%;
+  padding: 14px;
+  border-radius: 18px;
+  background: #1f1a17;
+  color: #f7f0ea;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.schema-code-stack {
+  display: grid;
+  gap: 18px;
+}
+
 .schema-details summary {
   cursor: pointer;
   font-weight: 700;
@@ -435,16 +503,16 @@ h2 {
 }
 
 @media (max-width: 960px) {
-  .playground-shell {
+  .studio-shell {
     width: min(100vw - 16px, 100%);
     margin: 16px auto;
   }
 
-  .playground-grid {
+  .studio-grid {
     grid-template-columns: 1fr;
   }
 
-  .playground-topbar,
+  .studio-topbar,
   .section-head,
   .task-head {
     flex-direction: column;

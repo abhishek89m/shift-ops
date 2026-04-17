@@ -7,7 +7,7 @@ import TaskListPanel from './components/TaskListPanel.vue';
 import TaskSwitchDialog from './components/TaskSwitchDialog.vue';
 import { useShiftOps } from './composables/useShiftOps';
 import { checklistForTask, resolutionForAction } from './task-ui';
-import type { LocaleCode, Task } from './types';
+import type { LocaleCode, Recommendation, Task } from './types';
 
 const splitQuery = typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)') : null;
 
@@ -32,6 +32,38 @@ const {
 } = useShiftOps();
 
 const locale = computed<LocaleCode>(() => (i18nLocale.value.startsWith('sv') ? 'sv' : 'en'));
+const recommended = computed<Recommendation | null>(() => {
+  const apiRecommendation = summary.value?.recommended_task;
+  const liveActiveTask = tasks.value.find((task) => task.status === 'in_progress') ?? null;
+
+  if (liveActiveTask) {
+    const activeReasons = apiRecommendation?.task.id === liveActiveTask.id
+      ? apiRecommendation.reasons.filter((reason) => reason !== 'Next best available task')
+      : [];
+
+    return {
+      task: liveActiveTask,
+      reasons: activeReasons.length > 0 ? activeReasons : ['Continue active task']
+    };
+  }
+
+  if (!apiRecommendation) {
+    return null;
+  }
+
+  const liveTask = tasks.value.find((task) => task.id === apiRecommendation.task.id);
+  if (!liveTask) {
+    return null;
+  }
+
+  const coherentReasons = apiRecommendation.reasons.filter((reason) => reason !== 'Continue active task');
+
+  return {
+    task: liveTask,
+    reasons: coherentReasons.length > 0 ? coherentReasons : ['Next best available task']
+  };
+});
+const recommendedTaskId = computed(() => recommended.value?.task.id ?? null);
 
 const selectedTask = computed(() => {
   if (selectedTaskId.value) {
@@ -64,6 +96,9 @@ const taskSections = computed(() => [
 ]);
 
 const showMobileDetail = computed(() => !isWide.value && selectedTask.value !== null);
+const canCompleteSelectedTask = computed(() => (
+  selectedTask.value ? canCompleteTask(selectedTask.value) : false
+));
 
 onMounted(() => {
   void refresh();
@@ -94,7 +129,7 @@ function handleScroll() {
 function preferredTask(nextTasks: Task[]) {
   return (
     nextTasks.find((task) => task.status === 'in_progress')
-    ?? (summary.value?.recommended_task ? nextTasks.find((task) => task.id === summary.value?.recommended_task?.task.id) : null)
+    ?? (recommended.value ? nextTasks.find((task) => task.id === recommended.value?.task.id) : null)
     ?? nextTasks[0]
     ?? null
   );
@@ -105,8 +140,7 @@ function syncChecklist(nextTasks: Task[]) {
 
   for (const task of nextTasks) {
     const size = checklistForTask(task.type, locale.value).length;
-    const current = checklistState.value[task.id] ?? [];
-    nextState[task.id] = Array.from({ length: size }, (_, index) => current[index] ?? false);
+    nextState[task.id] = Array.from({ length: size }, (_, index) => task.checklist_state?.[index] ?? false);
   }
 
   checklistState.value = nextState;
@@ -125,15 +159,31 @@ function syncSelection(nextTasks: Task[]) {
   selectedTaskId.value = preferredTask(nextTasks)?.id ?? null;
 }
 
-function toggleChecklist(index: number) {
+function canCompleteTask(task: Task) {
+  if (task.status !== 'in_progress') {
+    return false;
+  }
+
+  const checklist = checklistForTask(task.type, locale.value);
+  if (checklist.length === 0) {
+    return false;
+  }
+
+  return checklist.every((_, index) => checklistState.value[task.id]?.[index] ?? false);
+}
+
+async function toggleChecklist(index: number) {
   const currentTask = selectedTask.value;
-  if (!currentTask) {
+  if (!currentTask || currentTask.status !== 'in_progress') {
     return;
   }
 
-  checklistState.value[currentTask.id] = checklistState.value[currentTask.id].map((value, currentIndex) => (
+  const nextChecklist = checklistState.value[currentTask.id].map((value, currentIndex) => (
     currentIndex === index ? !value : value
   ));
+
+  checklistState.value[currentTask.id] = nextChecklist;
+  await patchTask(currentTask.id, { checklist_state: nextChecklist });
 }
 
 function openTask(task: Task) {
@@ -156,12 +206,16 @@ async function startTask(task: Task) {
 }
 
 async function completeTask(task: Task) {
+  if (!canCompleteTask(task)) {
+    return;
+  }
+
   await patchTask(task.id, {
     status: 'completed',
     completed_by: workerHandle,
     resolution_code: resolutionForAction(task, 'complete')
   });
-  selectedTaskId.value = task.id;
+  selectedTaskId.value = null;
 }
 
 async function skipTask(task: Task) {
@@ -170,7 +224,7 @@ async function skipTask(task: Task) {
     completed_by: workerHandle,
     resolution_code: resolutionForAction(task, 'skip')
   });
-  selectedTaskId.value = task.id;
+  selectedTaskId.value = null;
 }
 
 async function confirmSwitchTask() {
@@ -181,10 +235,22 @@ async function confirmSwitchTask() {
     return;
   }
 
-  await patchTask(currentTask.id, { status: 'pending' });
-  await patchTask(nextTask.id, { status: 'in_progress' });
-  selectedTaskId.value = nextTask.id;
-  switchCandidate.value = null;
+  try {
+    await patchTask(currentTask.id, { status: 'pending' });
+    await patchTask(nextTask.id, { status: 'in_progress' });
+    selectedTaskId.value = nextTask.id;
+    switchCandidate.value = null;
+  } catch (reason) {
+    try {
+      await patchTask(currentTask.id, { status: 'in_progress' });
+    } catch {
+      // Keep the original error below; state was already re-synced by patchTask refresh calls.
+    }
+
+    error.value = reason instanceof Error ? reason.message : 'Unknown task update error.';
+    selectedTaskId.value = currentTask.id;
+    switchCandidate.value = null;
+  }
 }
 </script>
 
@@ -220,7 +286,7 @@ async function confirmSwitchTask() {
         <TaskListPanel
           v-if="isWide || !showMobileDetail"
           :locale="locale"
-          :recommended="summary?.recommended_task ?? null"
+          :recommended="recommended"
           :sections="taskSections"
           :selected-task-id="selectedTaskId"
           @select="openTask"
@@ -229,6 +295,7 @@ async function confirmSwitchTask() {
         <TaskDetailPanel
           v-if="isWide || showMobileDetail"
           :action-busy="actionBusyId === selectedTask?.id"
+          :can-complete="canCompleteSelectedTask"
           :checklist-state="selectedTask ? checklistState[selectedTask.id] ?? [] : []"
           :is-wide="isWide"
           :locale="locale"

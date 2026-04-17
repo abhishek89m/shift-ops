@@ -62,10 +62,19 @@ Add a review-only preview path that helps test the real app:
 
 ## Review Tickets
 
+### Open
+
 - `RT-001` dedupe recommended task in `apps/web` list sections
-  Scope: `apps/web/src/App.vue`, `apps/web/src/components/TaskListPanel.vue`
+  Scope: `apps/web/src/App.vue`, `apps/web/src/components/TaskListPanel.vue`, `tests/e2e/app.spec.ts`
+  Status: reopened; current active task is shown in both the recommended card and the in-progress list
 - `RT-002` make task switching atomic or rollback-safe
   Scope: `apps/web/src/App.vue`, `apps/web/src/composables/useShiftOps.ts`, `services/api/handlers.go`, `services/api/store.go`, `services/api/main_test.go`
+  Status: partial fix landed; keep open until the double-failure gap is closed
+- `RT-005` revert optimistic checklist UI on patch failure
+  Scope: `apps/web/src/App.vue`, `apps/web/src/composables/useShiftOps.ts`, `tests/e2e/app.spec.ts`
+
+### Done
+
 - `RT-003` disable invalid terminal actions in task detail
   Scope: `apps/web/src/components/TaskDetailPanel.vue`
 - `RT-004` clear current web lint warnings so `pnpm check` passes

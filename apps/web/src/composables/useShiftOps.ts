@@ -12,8 +12,12 @@ export function useShiftOps() {
 
   const activeTask = computed(() => tasks.value.find((task) => task.status === 'in_progress') ?? null);
 
-  async function refresh() {
-    loading.value = true;
+  async function refresh(options: { silent?: boolean } = {}) {
+    const shouldShowLoading = !options.silent || tasks.value.length === 0;
+    if (shouldShowLoading) {
+      loading.value = true;
+    }
+
     error.value = '';
 
     try {
@@ -31,7 +35,9 @@ export function useShiftOps() {
     } catch (reason) {
       error.value = reason instanceof Error ? reason.message : 'Unknown shift data error.';
     } finally {
-      loading.value = false;
+      if (shouldShowLoading) {
+        loading.value = false;
+      }
     }
   }
 
@@ -51,7 +57,7 @@ export function useShiftOps() {
         throw new Error(message?.error ?? 'Task update failed.');
       }
 
-      await refresh();
+      await refresh({ silent: true });
     } catch (reason) {
       error.value = reason instanceof Error ? reason.message : 'Unknown task update error.';
       throw reason;

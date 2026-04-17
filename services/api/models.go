@@ -31,6 +31,7 @@ type task struct {
 	CompletedAt           *time.Time `json:"completed_at,omitempty"`
 	CompletedBy           *string    `json:"completed_by,omitempty"`
 	ResolutionCode        *string    `json:"resolution_code,omitempty"`
+	ChecklistState        []bool     `json:"checklist_state"`
 }
 
 type recommendation struct {
@@ -53,10 +54,11 @@ type tasksResponse struct {
 }
 
 type taskPatchRequest struct {
-	Status         taskStatus `json:"status"`
-	CompletedBy    *string    `json:"completed_by,omitempty"`
-	ResolutionCode *string    `json:"resolution_code,omitempty"`
-	Notes          *string    `json:"notes,omitempty"`
+	Status         *taskStatus `json:"status,omitempty"`
+	CompletedBy    *string     `json:"completed_by,omitempty"`
+	ResolutionCode *string     `json:"resolution_code,omitempty"`
+	Notes          *string     `json:"notes,omitempty"`
+	ChecklistState *[]bool     `json:"checklist_state,omitempty"`
 }
 
 type errorResponse struct {

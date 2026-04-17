@@ -22,6 +22,7 @@ export interface Task {
   completed_at?: string | null;
   completed_by?: string | null;
   resolution_code?: string | null;
+  checklist_state: boolean[];
 }
 
 export interface Recommendation {
@@ -44,8 +45,9 @@ export interface TasksResponse {
 }
 
 export interface TaskPatchRequest {
-  status: TaskStatus;
+  status?: TaskStatus;
   completed_by?: string;
   resolution_code?: string;
   notes?: string;
+  checklist_state?: boolean[];
 }
