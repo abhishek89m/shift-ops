@@ -1,0 +1,86 @@
+---
+schema: codex-doc/v1
+doc_kind: repo_plan
+scope: internal
+status: active
+audience:
+  - abhishek
+  - codex
+last_updated: 2026-04-17
+---
+
+# Shift Ops Plan
+
+## Current Checkpoint
+
+- Commit 1: monorepo + app/API shell + AI scaffold
+- Commit 2: quality bar + CI
+- Commit 3: repo-local planning context
+
+## Next Work
+
+### 1. API core
+
+Build the first real backend slice in `services/api`:
+
+- SQLite schema
+- seed data
+- `GET /v1/tasks`
+- `GET /v1/summary`
+- `PATCH /v1/tasks/:id`
+- status transition validation
+- task events
+- backend tests
+
+### 2. Web MVP
+
+Build the first real app flow in `apps/web`:
+
+- shift overview
+- recommended next task card
+- grouped task list
+- task detail
+- `start`, `complete`, `skip`
+- summary refresh from API
+
+### 3. Preview harness
+
+Add a review-only preview path that helps test the real app:
+
+- mobile view
+- tablet view
+- desktop view
+- iframe embeds the real app route
+
+## Current Priority Order
+
+1. finish backend task model and endpoints
+2. connect the web app to live API data
+3. restore the stronger product UX from the earlier prototype work
+4. add preview/test harness
+5. polish copy, states, and verification
+
+## Carry Forward Into Next Work
+
+- recommendation should stay primary
+- task list should feel operational, not dashboard-like
+- task detail should stay compact and decisive
+- shell should stay calm and mobile-first
+
+## Verification Gates
+
+After each meaningful step:
+
+- `pnpm check`
+- manual app review in browser
+- API happy-path check when backend changes land
+- keep container flow runnable
+
+## Stop Conditions
+
+Pause and review before moving on if:
+
+- API shape becomes hard to explain in interview
+- frontend state starts to need a real store
+- preview tooling starts duplicating product logic
+- any change weakens the mobile-first task flow

@@ -91,12 +91,19 @@ Repo ops for `ShiftOps/`.
 
 - default to repo-local `$smol` for chat and machine-facing docs
 - keep repo docs concise normal English
+- keep the current internal plan in `.agents/context/shift-ops.plan.md`
 - log material AI mistakes or corrections in `.agents/context/ai-audit-log.md`
 - keep repo-local decisions in `.agents/context/decision-log.md`
+
+## Docs
+
+- human-facing repo docs live in `docs/` when needed
+- repo-local plan and agent memory stay in `.agents/context/`
 
 ## Verification
 
 - run relevant local checks before handoff
 - prefer `pnpm check` as the default repo-wide verification entrypoint
+- when reviewing non-trivial diffs, leave inline comments for actionable findings
 - if a check is skipped or blocked, say so clearly
 - prefer the smallest convincing verification for the current commit

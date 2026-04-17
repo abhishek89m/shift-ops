@@ -1,20 +1,35 @@
 # Playground
 
-Internal repo-local playground notes.
+Repo-local testing shell.
 
-This repo keeps the split that worked well:
+Purpose:
 
-- `apps/web` = frontend playground + eventual product web app
-- `services/api` = backend playground + eventual product API
+- embed the real app from `apps/web`
+- inspect live API summary and task data
+- show backend schema shape
+- trigger reset / seed actions for testing
 
-Rule:
+Container-first run:
 
-- do not recreate separate frontend/backend prototype copies outside these folders
-- preview and test helpers should point at the real app/API here
-- any temporary review shell should consume `apps/web` and `services/api`, not fork them
+```bash
+pnpm podman:up
+```
 
-Use this as the mental model for the timed build:
+Then:
 
-- design and UX iteration land in `apps/web`
-- API, schema, and validation land in `services/api`
-- preview/test aids wrap the live outputs
+- app: `http://localhost:4174`
+- playground: `http://localhost:4175`
+
+Stop:
+
+```bash
+pnpm podman:down
+```
+
+Local fallback:
+
+```bash
+pnpm dev:api
+pnpm dev:web
+pnpm dev:playground
+```
