@@ -1,0 +1,15 @@
+{
+  "name": "shift-ops",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.33.0",
+  "type": "module",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "GOCACHE=$(pwd)/.cache/go-build sh -c 'cd services/api && go run .'",
+    "build:web": "pnpm --filter web build",
+    "build:api": "GOCACHE=$(pwd)/.cache/go-build sh -c 'cd services/api && go build ./...'",
+    "build": "pnpm build:web && pnpm build:api",
+    "version:sync": "node scripts/version.mjs"
+  }
+}

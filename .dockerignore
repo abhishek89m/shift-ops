@@ -1,0 +1,10 @@
+.git
+.jj
+node_modules
+dist
+coverage
+.DS_Store
+prototype
+studio
+task
+

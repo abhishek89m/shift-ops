@@ -1,0 +1,15 @@
+.DS_Store
+.jj/
+.cache/
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+*.log
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
