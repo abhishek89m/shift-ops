@@ -432,8 +432,8 @@ func scanTask(scanner interface{ Scan(...any) error }) (task, error) {
 }
 
 func validatePatchRequest(req taskPatchRequest) error {
-	if req.Status != statusInProgress && req.Status != statusCompleted && req.Status != statusSkipped {
-		return fmt.Errorf("%w: status must be in_progress, completed, or skipped", errValidation)
+	if req.Status != statusPending && req.Status != statusInProgress && req.Status != statusCompleted && req.Status != statusSkipped {
+		return fmt.Errorf("%w: status must be pending, in_progress, completed, or skipped", errValidation)
 	}
 
 	if req.Status == statusCompleted || req.Status == statusSkipped {
@@ -460,7 +460,7 @@ func validatePatchRequest(req taskPatchRequest) error {
 func canTransition(from, to taskStatus) bool {
 	allowed := map[taskStatus][]taskStatus{
 		statusPending:    {statusInProgress, statusCompleted, statusSkipped},
-		statusInProgress: {statusCompleted, statusSkipped},
+		statusInProgress: {statusPending, statusCompleted, statusSkipped},
 	}
 
 	return slices.Contains(allowed[from], to)

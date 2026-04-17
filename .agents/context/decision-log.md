@@ -38,6 +38,9 @@ Repo-local working memory for `ShiftOps/`.
 - top-right settings icon opens language choice
 - no `Pinia` yet; local state + composables first
 - progress track stays inside the primary shell card
+- show worker-facing task codes like `TP-001` instead of raw storage ids in the UI
+- header behaves like full-width app chrome, with content scrolling underneath it
+- header starts inset and rounded, then snaps into flat top-nav chrome after scroll
 
 ## Backend Decisions
 
@@ -45,6 +48,7 @@ Repo-local working memory for `ShiftOps/`.
 - no fake shared schema across TS + Go
 - keep SQL small and inspectable
 - no Swagger UI in the timed window
+- repo-local playground should focus on live API endpoint testing before raw schema reference
 
 ## Non-Goals For Now
 

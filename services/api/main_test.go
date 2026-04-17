@@ -123,6 +123,28 @@ func TestPatchTaskRejectsInvalidTransition(t *testing.T) {
 	}
 }
 
+func TestPatchTaskAllowsReturningActiveTaskToPending(t *testing.T) {
+	server := newTestServer(t)
+
+	body := taskPatchRequest{Status: statusPending}
+	payload, _ := json.Marshal(body)
+
+	req := httptest.NewRequest(http.MethodPatch, "/v1/tasks/task_quality_01", bytes.NewReader(payload))
+	rec := httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d, body=%s", rec.Code, rec.Body.String())
+	}
+
+	var updated task
+	decodeJSON(t, rec.Body.Bytes(), &updated)
+
+	if updated.Status != statusPending {
+		t.Fatalf("expected pending, got %s", updated.Status)
+	}
+}
+
 func TestPatchTaskRejectsUnknownResolutionCode(t *testing.T) {
 	server := newTestServer(t)
 

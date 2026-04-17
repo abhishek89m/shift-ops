@@ -60,6 +60,17 @@ Add a review-only preview path that helps test the real app:
 4. add preview/test harness
 5. polish copy, states, and verification
 
+## Review Tickets
+
+- `RT-001` dedupe recommended task in `apps/web` list sections
+  Scope: `apps/web/src/App.vue`, `apps/web/src/components/TaskListPanel.vue`
+- `RT-002` make task switching atomic or rollback-safe
+  Scope: `apps/web/src/App.vue`, `apps/web/src/composables/useShiftOps.ts`, `services/api/handlers.go`, `services/api/store.go`, `services/api/main_test.go`
+- `RT-003` disable invalid terminal actions in task detail
+  Scope: `apps/web/src/components/TaskDetailPanel.vue`
+- `RT-004` clear current web lint warnings so `pnpm check` passes
+  Scope: `apps/web/src/components/TaskDetailPanel.vue`, `apps/web/src/components/TaskListPanel.vue`
+
 ## Carry Forward Into Next Work
 
 - recommendation should stay primary
