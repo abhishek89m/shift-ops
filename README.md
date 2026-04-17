@@ -63,9 +63,27 @@ The repo includes:
 
 - `apps/web/Dockerfile`
 - `services/api/Dockerfile`
+- `playground/Dockerfile`
 - `compose.yml`
 
 Use either Docker Compose or Podman Compose in the environment you prefer.
+
+### Podman stack
+
+```bash
+pnpm podman:up
+```
+
+Then use:
+
+- app: `http://localhost:4174`
+- playground: `http://localhost:4175`
+
+Stop it with:
+
+```bash
+pnpm podman:down
+```
 
 ## Version sync
 

@@ -12,8 +12,15 @@ services:
       dockerfile: apps/web/Dockerfile
     depends_on:
       - api
-    environment:
-      VITE_API_BASE_URL: http://api:8080
     ports:
-      - "4173:4173"
+      - "4174:4173"
 
+  playground:
+    build:
+      context: .
+      dockerfile: playground/Dockerfile
+    depends_on:
+      - api
+      - web
+    ports:
+      - "4175:4175"
