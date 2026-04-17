@@ -7,8 +7,12 @@
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "dev:api": "GOCACHE=$(pwd)/.cache/go-build sh -c 'cd services/api && go run .'",
+    "lint:web": "pnpm --filter web lint",
+    "typecheck:web": "pnpm --filter web typecheck",
     "build:web": "pnpm --filter web build",
     "build:api": "GOCACHE=$(pwd)/.cache/go-build sh -c 'cd services/api && go build ./...'",
+    "test:api": "GOCACHE=$(pwd)/.cache/go-build sh -c 'cd services/api && go test ./...'",
+    "check": "sh ./scripts/check.sh",
     "build": "pnpm build:web && pnpm build:api",
     "version:sync": "node scripts/version.mjs"
   }

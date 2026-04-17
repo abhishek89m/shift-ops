@@ -49,11 +49,30 @@ Repo ops for `ShiftOps/`.
 - package manager: `pnpm`
 - vcs: colocated `jj` + `git`
 
+## VCS Flow
+
+- prefer branch-first work, not direct edits on `main`
+- default flow:
+  - implement on a short-lived branch
+  - let Abhishek review
+  - commit only after review
+  - push branch
+  - open PR
+- keep `main` clean and releasable
+- use `git` for remote compatibility and PR flow
+- use `jj` for local history shaping and workspace management
+- prefer `jj` for local checkpoints and iterative shaping before a reviewable commit exists
+- use `jj new` / `jj describe` freely during local iteration if it reduces friction
+- use `jj workspace` when parallel lanes would otherwise collide in one worktree
+- use `jj workspace add` only for bounded parallel lanes with low overlap
+- do not create extra workspaces unless they materially reduce conflict or context switching
+
 ## Run
 
 - `pnpm install`
 - `pnpm dev:web`
 - `pnpm dev:api`
+- `pnpm check`
 - `pnpm build`
 - `pnpm build:web`
 - `pnpm build:api`
@@ -62,9 +81,11 @@ Repo ops for `ShiftOps/`.
 
 - one logical change per commit
 - keep commits vertical and inspectable
+- let each commit tell one clear story in the PR
 - do not duplicate product logic in review-only surfaces
 - do not add heavy infra unless it clearly lowers risk
 - keep validation authoritative in Go
+- if a later-scope change lands early, update the plan/docs to match reality instead of pretending otherwise
 
 ## AI Notes
 
@@ -76,5 +97,6 @@ Repo ops for `ShiftOps/`.
 ## Verification
 
 - run relevant local checks before handoff
+- prefer `pnpm check` as the default repo-wide verification entrypoint
 - if a check is skipped or blocked, say so clearly
 - prefer the smallest convincing verification for the current commit
