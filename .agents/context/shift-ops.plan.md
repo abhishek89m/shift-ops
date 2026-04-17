@@ -13,52 +13,64 @@ last_updated: 2026-04-17
 
 ## Current Checkpoint
 
-- Commit 1: monorepo + app/API shell + AI scaffold
-- Commit 2: quality bar + CI
-- Commit 3: repo-local planning context
+- monorepo/runtime shell is in place
+- CI and repo quality bar exist
+- backend MVP exists in `services/api`
+- web MVP exists in `apps/web`
+- `studio/` works as the repo-local review surface
+- repo docs and Playwright smoke coverage exist
 
 ## Next Work
 
-### 1. API core
+### 1. Hardening
 
-Build the first real backend slice in `services/api`:
+- make task switching atomic or truly rollback-safe
+- revert checklist UI on PATCH failure
+- finish docs drift cleanup in:
+  - `README.md`
+  - `docs/api.md`
+  - `docs/guide.md`
+- expand browser coverage beyond current smoke paths
 
-- SQLite schema
-- seed data
-- `GET /v1/tasks`
-- `GET /v1/summary`
-- `PATCH /v1/tasks/:id`
-- status transition validation
-- task events
-- backend tests
+### 2. Code Cleanup
 
-### 2. Web MVP
+- split `services/api/task_store.go` further if time still exists
+- add web unit tests for composables and task-action rules
+- decide whether browser tests should join `pnpm check` or stay separate
 
-Build the first real app flow in `apps/web`:
+### 3. Optional MVP 2
 
-- shift overview
-- recommended next task card
-- grouped task list
-- task detail
-- `start`, `complete`, `skip`
-- summary refresh from API
-
-### 3. Preview harness
-
-Add a review-only preview path that helps test the real app:
-
-- mobile view
-- tablet view
-- desktop view
-- iframe embeds the real app route
+- tiny internal task-load/create surface
+- richer skip reason flow
+- slightly better shift summary/accountability details
 
 ## Current Priority Order
 
-1. finish backend task model and endpoints
-2. connect the web app to live API data
-3. restore the stronger product UX from the earlier prototype work
-4. add preview/test harness
-5. polish copy, states, and verification
+1. fix docs drift and keep the repo explainable
+2. make task switching safer
+3. revert checklist UI on patch failure
+4. deepen browser and web test coverage
+5. only then do extra cleanup or MVP 2 work
+
+## Review Tickets
+
+### Open
+
+- `RT-002` make task switching atomic or rollback-safe
+  Scope: `apps/web/src/App.vue`, `apps/web/src/composables/useShiftOps.ts`, `services/api/handlers.go`, `services/api/store.go`, `services/api/main_test.go`
+  Status: partial fix landed; keep open until the multi-step switch gap is closed
+- `RT-005` revert optimistic checklist UI on patch failure
+  Scope: `apps/web/src/App.vue`, `apps/web/src/composables/useShiftOps.ts`, `tests/e2e/app.spec.ts`
+
+### Done
+
+- `RT-001` keep recommended work visible without making tasks disappear from sections
+  Scope: `apps/web/src/App.vue`, `apps/web/src/components/TaskListPanel.vue`, `tests/e2e/app.spec.ts`
+  Status: resolved by keeping active work visible in `In progress` and recommended pending work visible in `Remaining`
+- `RT-003` disable invalid terminal actions in task detail
+  Scope: `apps/web/src/components/TaskDetailPanel.vue`
+- `RT-004` clear current web lint warnings so `pnpm check` passes
+  Scope: `apps/web/src/components/TaskDetailPanel.vue`, `apps/web/src/components/TaskListPanel.vue`
 
 ## Carry Forward Into Next Work
 
@@ -66,15 +78,16 @@ Add a review-only preview path that helps test the real app:
 - task list should feel operational, not dashboard-like
 - task detail should stay compact and decisive
 - shell should stay calm and mobile-first
+- recommended tasks should not disappear from grouped sections
 
 ## Verification Gates
 
 After each meaningful step:
 
 - `pnpm check`
+- `npx playwright test` when web interaction rules change
 - manual app review in browser
 - API happy-path check when backend changes land
-- keep container flow runnable
 
 ## Stop Conditions
 

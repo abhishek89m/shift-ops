@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   started_at TEXT,
   completed_at TEXT,
   completed_by TEXT,
-  resolution_code TEXT
+  resolution_code TEXT,
+  checklist_state TEXT NOT NULL DEFAULT '[]'
 );
 
 CREATE TABLE IF NOT EXISTS task_events (
@@ -31,4 +32,3 @@ CREATE TABLE IF NOT EXISTS task_events (
   notes TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL
 );
-

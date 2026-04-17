@@ -24,7 +24,7 @@ Repo ops for `ShiftOps/`.
 
 - `apps/web` = Vue + TypeScript + Vite frontend
 - `services/api` = Go API
-- `playground/` = repo-local notes for preview/test helpers
+- `studio/` = repo-local preview + API docs shell
 - `.agents/context/` = repo-local AI memory that travels with the repo
 - `.agents/skills/` = repo-local agent skills
 

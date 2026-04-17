@@ -15,10 +15,10 @@ services:
     ports:
       - "4174:4173"
 
-  playground:
+  studio:
     build:
       context: .
-      dockerfile: playground/Dockerfile
+      dockerfile: studio/Dockerfile
     depends_on:
       - api
       - web
