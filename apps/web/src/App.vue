@@ -63,8 +63,6 @@ const recommended = computed<Recommendation | null>(() => {
     reasons: coherentReasons.length > 0 ? coherentReasons : ['Next best available task']
   };
 });
-const recommendedTaskId = computed(() => recommended.value?.task.id ?? null);
-
 const selectedTask = computed(() => {
   if (selectedTaskId.value) {
     return tasks.value.find((task) => task.id === selectedTaskId.value) ?? null;
