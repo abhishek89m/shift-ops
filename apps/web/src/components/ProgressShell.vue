@@ -8,7 +8,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const progress = Math.round((props.completed / props.total) * 100);
+const progress = props.total === 0 ? 0 : Math.round((props.completed / props.total) * 100);
 </script>
 
 <template>
@@ -22,7 +22,9 @@ const progress = Math.round((props.completed / props.total) * 100);
         <div class="product-copy">
           <span class="eyebrow">{{ t('shell.eyebrow') }}</span>
           <h1>{{ t('shell.title') }}</h1>
-          <p class="lede">{{ t('shell.lede') }}</p>
+          <p class="lede">
+            {{ t('shell.lede') }}
+          </p>
         </div>
         <div class="progress-summary">
           <span class="meta-label">{{ t('shell.progressLabel') }}</span>
@@ -31,8 +33,14 @@ const progress = Math.round((props.completed / props.total) * 100);
         </div>
       </div>
 
-      <div class="progress-track" aria-hidden="true">
-        <span class="progress-fill" :style="{ width: `${progress}%` }"></span>
+      <div
+        class="progress-track"
+        aria-hidden="true"
+      >
+        <span
+          class="progress-fill"
+          :style="{ width: `${progress}%` }"
+        />
       </div>
     </section>
 

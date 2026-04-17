@@ -51,6 +51,12 @@ pnpm build:api
 pnpm build
 ```
 
+## Checks
+
+```bash
+pnpm check
+```
+
 ## Container files
 
 The repo includes:
